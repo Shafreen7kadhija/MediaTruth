@@ -1,5 +1,6 @@
 from flask import Flask, request
 from services.detector import analyze_media
+from services.decision_engine import build_analysis_result
 import os
 import tempfile
 
@@ -38,7 +39,9 @@ def analyze():
 
         result = analyze_media(temp_path)
 
-        return result
+        ai_score = result["type"]["ai_generated"]
+
+        return build_analysis_result(ai_score)
 
     finally:
         if temp_path and os.path.exists(temp_path):
