@@ -37,11 +37,18 @@ def analyze():
             uploaded_file.save(temp_file)
             temp_path = temp_file.name
 
-        result = analyze_media(temp_path)
+        try:
+            result = analyze_media(temp_path)
+            ai_score = result["type"]["ai_generated"]
+            return build_analysis_result(ai_score)
 
-        ai_score = result["type"]["ai_generated"]
+        except RuntimeError as exc:
+            return {"error": str(exc)}, 502
 
-        return build_analysis_result(ai_score)
+        except (KeyError, TypeError, ValueError):
+            return {
+                "error": "Invalid response from the analysis service."
+            }, 502
 
     finally:
         if temp_path and os.path.exists(temp_path):
