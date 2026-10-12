@@ -90,3 +90,25 @@ Results may vary depending on the detection model, media quality, available meta
 **Status:** In Development
 
 This project is being developed as a learning and portfolio project, with an emphasis on transparency, explainability, and responsible AI use.
+
+## Automated Testing
+
+MediaTruth includes automated tests for its decision engine and Flask API using Python's built-in `unittest` framework.
+
+### Run the Tests
+
+Activate the backend virtual environment, then run the following command from the project root:
+
+```powershell
+python -m unittest discover -s tests -v
+```
+
+### Test Coverage
+
+- AI score classification for likely AI-generated, likely natural, and uncertain results.
+- Analysis response fields and score preservation.
+- Backend health endpoint.
+- Requests with missing files or empty filenames.
+- Detector error handling using mocked responses.
+
+The test suite runs without making live Sightengine API requests, helping validate backend behavior without consuming API credits.
