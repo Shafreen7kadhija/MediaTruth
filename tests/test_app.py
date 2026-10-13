@@ -1,4 +1,5 @@
 import sys
+import io
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -47,10 +48,7 @@ class TestMediaTruthAPI(unittest.TestCase):
         response = self.client.post(
             "/analyze",
             data={
-                "file": (
-                    __import__("io").BytesIO(b"fake image content"),
-                    "test.jpg"
-                )
+                "file": (io.BytesIO(b"fake image content"), "test.jpg")
             },
             content_type="multipart/form-data"
         )
@@ -58,6 +56,53 @@ class TestMediaTruthAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 502)
         self.assertIn("error", response.get_json())
         mock_analyze.assert_called_once()
+
+    def test_rejects_unsupported_file_type(self):
+        response = self.client.post(
+            "/analyze",
+            data={
+                "file": (io.BytesIO(b"some text"), "document.txt")
+            },
+            content_type="multipart/form-data"
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(
+            "Unsupported file type",
+            response.get_json()["error"]
+        )
+
+    @patch("app.analyze_media")
+    def test_rejects_empty_file(self, mock_analyze):
+        response = self.client.post(
+            "/analyze",
+            data={
+                "file": (io.BytesIO(b""), "empty.jpg")
+            },
+            content_type="multipart/form-data"
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("empty", response.get_json()["error"].lower())
+        mock_analyze.assert_not_called()
+
+    def test_rejects_file_over_10_mb(self):
+        response = self.client.post(
+            "/analyze",
+            data={
+                "file": (
+                    io.BytesIO(b"x" * (10 * 1024 * 1024 + 1)),
+                    "large.jpg"
+                )
+            },
+            content_type="multipart/form-data"
+        )
+
+        self.assertEqual(response.status_code, 413)
+        self.assertIn(
+            "too large",
+            response.get_json()["error"].lower()
+        )
 
 
 if __name__ == "__main__":
