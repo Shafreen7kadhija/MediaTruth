@@ -1,8 +1,10 @@
 from flask import Flask, request
 from services.detector import analyze_media
 from services.decision_engine import build_analysis_result
+from PIL import Image, UnidentifiedImageError
 import os
 import tempfile
+
 
 app = Flask(__name__)
 
@@ -34,7 +36,9 @@ def health():
 
 @app.errorhandler(413)
 def file_too_large(error):
-    return {"error": "File is too large. Maximum allowed size is 10 MB."}, 413
+    return {
+        "error": "File is too large. Maximum allowed size is 10 MB."
+    }, 413
 
 
 @app.post("/analyze")
@@ -62,6 +66,22 @@ def analyze():
         if os.path.getsize(temp_path) == 0:
             return {"error": "The uploaded file is empty."}, 400
 
+        # Validate actual image content.
+        try:
+            with Image.open(temp_path) as image:
+                if image.format not in {"JPEG", "PNG", "WEBP"}:
+                    return {
+                        "error": "Unsupported image format. Upload JPG, JPEG, PNG, or WEBP."
+                    }, 400
+
+                image.verify()
+
+        except (UnidentifiedImageError, OSError, ValueError):
+            return {
+                "error": "Invalid image content. Please upload a valid image."
+            }, 400
+
+        # Analyze the validated image.
         try:
             result = analyze_media(temp_path)
             ai_score = result["type"]["ai_generated"]
@@ -76,55 +96,10 @@ def analyze():
             }, 502
 
     finally:
+        # Remove the temporary file even if analysis fails.
         if temp_path and os.path.exists(temp_path):
             os.remove(temp_path)
 
-    def test_rejects_unsupported_file_type(self):
-        response = self.client.post(
-            "/analyze",
-            data={
-                "file": (
-                    __import__("io").BytesIO(b"some text"),
-                    "document.txt"
-                )
-            },
-            content_type="multipart/form-data"
-        )
-
-        self.assertEqual(response.status_code, 400)
-        self.assertIn("Unsupported file type", response.get_json()["error"])
-
-    def test_rejects_empty_file(self):
-        with patch("app.analyze_media") as mock_analyze:
-            response = self.client.post(
-                "/analyze",
-                data={
-                    "file": (
-                        __import__("io").BytesIO(b""),
-                        "empty.jpg"
-                    )
-                },
-                content_type="multipart/form-data"
-            )
-
-        self.assertEqual(response.status_code, 400)
-        self.assertIn("empty", response.get_json()["error"].lower())
-        mock_analyze.assert_not_called()
-
-    def test_rejects_file_over_10_mb(self):
-        response = self.client.post(
-            "/analyze",
-            data={
-                "file": (
-                    __import__("io").BytesIO(b"x" * (10 * 1024 * 1024 + 1)),
-                    "large.jpg"
-                )
-            },
-            content_type="multipart/form-data"
-        )
-
-        self.assertEqual(response.status_code, 413)
-        self.assertIn("too large", response.get_json()["error"].lower())
 
 if __name__ == "__main__":
     app.run(debug=True)
