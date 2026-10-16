@@ -112,3 +112,43 @@ python -m unittest discover -s tests -v
 - Detector error handling using mocked responses.
 
 The test suite runs without making live Sightengine API requests, helping validate backend behavior without consuming API credits.
+
+## Backend Setup
+
+Follow these steps to run the MediaTruth Flask backend locally.
+
+### 1. Create and activate a virtual environment
+
+```bash
+python -m venv backend/venv
+```
+
+Windows PowerShell:
+
+```powershell
+.\backend\venv\Scripts\Activate.ps1
+```
+
+### 2. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Configure environment variables
+
+Create a `.env` file using the project's required environment variable names and add your Sightengine API credentials. Keep your API credentials private and never commit the `.env` file.
+
+### 4. Start the backend
+
+```bash
+python backend/app.py
+```
+
+### 5. Check the health endpoint
+
+With the backend running, open:
+
+`http://127.0.0.1:5000/health`
+
+The endpoint should return a healthy status when the server is running.
