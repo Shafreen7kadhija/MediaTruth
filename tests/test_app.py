@@ -4,11 +4,24 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from PIL import Image
+
 # Add the backend folder to Python's import path
 BACKEND_PATH = Path(__file__).resolve().parents[1] / "backend"
 sys.path.insert(0, str(BACKEND_PATH))
 
 from app import app
+
+
+def make_test_png():
+    """Create a small, valid PNG image for API tests."""
+    image_buffer = io.BytesIO()
+    Image.new("RGB", (1, 1), color="red").save(
+        image_buffer,
+        format="PNG"
+    )
+    image_buffer.seek(0)
+    return image_buffer
 
 
 class TestMediaTruthAPI(unittest.TestCase):
@@ -19,13 +32,11 @@ class TestMediaTruthAPI(unittest.TestCase):
 
     def test_health_endpoint(self):
         response = self.client.get("/health")
-
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()["status"], "healthy")
 
     def test_analyze_without_file(self):
         response = self.client.post("/analyze")
-
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.get_json())
 
@@ -35,7 +46,6 @@ class TestMediaTruthAPI(unittest.TestCase):
             data={"file": (None, "")},
             content_type="multipart/form-data"
         )
-
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.get_json())
 
@@ -44,15 +54,11 @@ class TestMediaTruthAPI(unittest.TestCase):
         mock_analyze.side_effect = RuntimeError(
             "Sightengine request timed out."
         )
-
         response = self.client.post(
             "/analyze",
-            data={
-                "file": (io.BytesIO(b"fake image content"), "test.jpg")
-            },
+            data={"file": (make_test_png(), "test.png")},
             content_type="multipart/form-data"
         )
-
         self.assertEqual(response.status_code, 502)
         self.assertIn("error", response.get_json())
         mock_analyze.assert_called_once()
@@ -65,7 +71,6 @@ class TestMediaTruthAPI(unittest.TestCase):
             },
             content_type="multipart/form-data"
         )
-
         self.assertEqual(response.status_code, 400)
         self.assertIn(
             "Unsupported file type",
@@ -81,7 +86,6 @@ class TestMediaTruthAPI(unittest.TestCase):
             },
             content_type="multipart/form-data"
         )
-
         self.assertEqual(response.status_code, 400)
         self.assertIn("empty", response.get_json()["error"].lower())
         mock_analyze.assert_not_called()
@@ -97,12 +101,30 @@ class TestMediaTruthAPI(unittest.TestCase):
             },
             content_type="multipart/form-data"
         )
-
         self.assertEqual(response.status_code, 413)
         self.assertIn(
             "too large",
             response.get_json()["error"].lower()
         )
+
+    @patch("app.analyze_media")
+    def test_rejects_invalid_image_content(self, mock_analyze):
+        response = self.client.post(
+            "/analyze",
+            data={
+                "file": (
+                    io.BytesIO(b"this is not a real image"),
+                    "fake.jpg"
+                )
+            },
+            content_type="multipart/form-data"
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(
+            "Invalid image content",
+            response.get_json()["error"]
+        )
+        mock_analyze.assert_not_called()
 
 
 if __name__ == "__main__":
