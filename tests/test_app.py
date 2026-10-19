@@ -37,6 +37,10 @@ class TestMediaTruthAPI(unittest.TestCase):
         self.assertEqual(response.get_json()["status"], "healthy")
         self.assertIn("application/json", response.content_type)
 
+    def test_health_endpoint_rejects_post(self):
+        response = self.client.post("/health")
+        self.assertEqual(response.status_code, 405)
+
     def test_analyze_without_file(self):
         response = self.client.post("/analyze")
         self.assertEqual(response.status_code, 400)
