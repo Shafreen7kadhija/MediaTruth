@@ -62,6 +62,10 @@ class TestMediaTruthAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.get_json())
 
+    def test_analyze_rejects_get_request(self):
+        response = self.client.get("/analyze")
+        self.assertEqual(response.status_code, 405)
+
     @patch("app.analyze_media")
     def test_analyze_handles_detector_error(self, mock_analyze):
         mock_analyze.side_effect = RuntimeError(
