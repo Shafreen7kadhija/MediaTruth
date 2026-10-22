@@ -152,3 +152,21 @@ With the backend running, open:
 `http://127.0.0.1:5000/health`
 
 The endpoint should return a healthy status when the server is running.
+
+## Running Tests
+
+MediaTruth includes automated tests for API validation and decision-engine behavior.
+
+Activate the virtual environment:
+
+```powershell
+.\backend\venv\Scripts\Activate.ps1
+```
+
+Run the test suite:
+
+```powershell
+python -m unittest discover -s tests -v
+```
+
+The tests cover API endpoints, file upload validation, detector errors, and decision-engine results.
