@@ -170,3 +170,17 @@ python -m unittest discover -s tests -v
 ```
 
 The tests cover API endpoints, file upload validation, detector errors, and decision-engine results.
+
+## Project Status
+
+MediaTruth is under active development.
+
+- Backend API validation and automated tests are implemented.
+- Image upload validation includes file type, size, and image-content checks.
+- Decision-engine tests cover high, low, and uncertain AI scores.
+
+### Future Improvements
+
+- Enhance error handling and logging.
+- Expand automated test coverage.
+- Improve the user interface and analysis experience.
