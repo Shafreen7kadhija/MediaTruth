@@ -33,6 +33,15 @@ class TestDecisionEngine(unittest.TestCase):
 
         self.assertEqual(result["ai_score"], 0.99)
 
+    def test_ai_score_at_high_threshold(self):
+        result = build_analysis_result(0.85)
+
+        self.assertEqual(
+            result["classification"],
+            "Likely AI-generated"
+        )
+        self.assertEqual(result["confidence"], "High")
+
 
 if __name__ == "__main__":
     unittest.main()
