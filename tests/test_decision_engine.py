@@ -51,5 +51,11 @@ class TestDecisionEngine(unittest.TestCase):
             )
         self.assertEqual(result["confidence"], "High")
 
+    def test_ai_score_at_middle_value(self):
+        result = build_analysis_result(0.50)
+
+        self.assertEqual(result["classification"], "Uncertain")
+        self.assertEqual(result["confidence"], "Low")
+
 if __name__ == "__main__":
     unittest.main()
