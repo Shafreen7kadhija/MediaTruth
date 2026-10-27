@@ -57,5 +57,11 @@ class TestDecisionEngine(unittest.TestCase):
         self.assertEqual(result["classification"], "Uncertain")
         self.assertEqual(result["confidence"], "Low")
 
+    def test_ai_score_just_below_high_threshold(self):
+        result = build_analysis_result(0.84)
+
+        self.assertEqual(result["classification"], "Uncertain")
+        self.assertEqual(result["confidence"], "Low")
+
 if __name__ == "__main__":
     unittest.main()
