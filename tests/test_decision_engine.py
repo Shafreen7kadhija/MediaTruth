@@ -62,6 +62,17 @@ class TestDecisionEngine(unittest.TestCase):
 
         self.assertEqual(result["classification"], "Uncertain")
         self.assertEqual(result["confidence"], "Low")
+    def test_rejects_negative_ai_score(self):
+        with self.assertRaises(ValueError):
+            classify_ai_score(-0.5)
+
+    def test_rejects_ai_score_above_one(self):
+        with self.assertRaises(ValueError):
+            classify_ai_score(1.5)
+
+    def test_rejects_non_numeric_ai_score(self):
+        with self.assertRaises(ValueError):
+            classify_ai_score(None)
 
 if __name__ == "__main__":
     unittest.main()

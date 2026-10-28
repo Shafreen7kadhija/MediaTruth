@@ -1,4 +1,10 @@
 def classify_ai_score(ai_score):
+    if not isinstance(ai_score, (int, float)) or isinstance(ai_score, bool):
+        raise ValueError("AI score must be a number between 0 and 1.")
+
+    if not 0 <= ai_score <= 1:
+        raise ValueError("AI score must be between 0 and 1.")
+
     if ai_score >= 0.85:
         return "Likely AI-generated"
 
