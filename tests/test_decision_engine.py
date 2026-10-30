@@ -46,9 +46,9 @@ class TestDecisionEngine(unittest.TestCase):
         result = build_analysis_result(0.15)
 
         self.assertEqual(
-                result["classification"],
-                "Likely natural"
-            )
+            result["classification"],
+            "Likely natural"
+        )
         self.assertEqual(result["confidence"], "High")
 
     def test_ai_score_at_middle_value(self):
@@ -62,6 +62,7 @@ class TestDecisionEngine(unittest.TestCase):
 
         self.assertEqual(result["classification"], "Uncertain")
         self.assertEqual(result["confidence"], "Low")
+
     def test_rejects_negative_ai_score(self):
         with self.assertRaises(ValueError):
             classify_ai_score(-0.5)
@@ -73,6 +74,15 @@ class TestDecisionEngine(unittest.TestCase):
     def test_rejects_non_numeric_ai_score(self):
         with self.assertRaises(ValueError):
             classify_ai_score(None)
+
+    def test_rejects_nan_ai_score(self):
+        with self.assertRaises(ValueError):
+            classify_ai_score(float("nan"))
+
+    def test_rejects_infinite_ai_score(self):
+        with self.assertRaises(ValueError):
+            classify_ai_score(float("inf"))
+
 
 if __name__ == "__main__":
     unittest.main()
