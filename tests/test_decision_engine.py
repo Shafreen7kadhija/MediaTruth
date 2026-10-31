@@ -83,6 +83,13 @@ class TestDecisionEngine(unittest.TestCase):
         with self.assertRaises(ValueError):
             classify_ai_score(float("inf"))
 
+    def test_rejects_true_as_ai_score(self):
+        with self.assertRaises(ValueError):
+            classify_ai_score(True)
+
+    def test_rejects_false_as_ai_score(self):
+        with self.assertRaises(ValueError):
+            classify_ai_score(False)
 
 if __name__ == "__main__":
     unittest.main()
