@@ -91,5 +91,17 @@ class TestDecisionEngine(unittest.TestCase):
         with self.assertRaises(ValueError):
             classify_ai_score(False)
 
+    def test_high_ai_score_has_high_confidence(self):
+        result = build_analysis_result(0.95)
+
+        self.assertEqual(result["classification"], "Likely AI-generated")
+        self.assertEqual(result["confidence"], "High")
+
+    def test_low_ai_score_has_high_confidence(self):
+        result = build_analysis_result(0.05)
+
+        self.assertEqual(result["classification"], "Likely natural")
+        self.assertEqual(result["confidence"], "High")
+
 if __name__ == "__main__":
     unittest.main()
