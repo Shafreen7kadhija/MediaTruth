@@ -103,5 +103,17 @@ class TestDecisionEngine(unittest.TestCase):
         self.assertEqual(result["classification"], "Likely natural")
         self.assertEqual(result["confidence"], "High")
 
+    def test_score_just_above_low_threshold_has_low_confidence(self):
+        result = build_analysis_result(0.16)
+
+        self.assertEqual(result["classification"], "Uncertain")
+        self.assertEqual(result["confidence"], "Low")
+
+    def test_score_just_below_high_threshold_has_low_confidence(self):
+        result = build_analysis_result(0.84)
+
+        self.assertEqual(result["classification"], "Uncertain")
+        self.assertEqual(result["confidence"], "Low")
+
 if __name__ == "__main__":
     unittest.main()
