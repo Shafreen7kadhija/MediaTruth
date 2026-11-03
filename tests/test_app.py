@@ -80,6 +80,35 @@ class TestMediaTruthAPI(unittest.TestCase):
         self.assertIn("error", response.get_json())
         mock_analyze.assert_called_once()
 
+    @patch("app.analyze_media")
+    def test_analyze_successful_image_upload(self, mock_analyze):
+        mock_analyze.return_value = {
+            "type": {
+                "ai_generated": 0.95
+            }
+        }
+
+        response = self.client.post(
+            "/analyze",
+            data={"file": (make_test_png(), "test.png")},
+            content_type="multipart/form-data"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.is_json)
+
+        result = response.get_json()
+
+        self.assertEqual(result["ai_score"], 0.95)
+        self.assertEqual(
+            result["classification"],
+            "Likely AI-generated"
+        )
+        self.assertEqual(result["confidence"], "High")
+        self.assertIn("disclaimer", result)
+
+        mock_analyze.assert_called_once()
+
     def test_rejects_unsupported_file_type(self):
         response = self.client.post(
             "/analyze",
