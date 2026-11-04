@@ -81,6 +81,25 @@ class TestMediaTruthAPI(unittest.TestCase):
         mock_analyze.assert_called_once()
 
     @patch("app.analyze_media")
+    def test_temp_file_deleted_after_detector_error(self, mock_analyze):
+        mock_analyze.side_effect = RuntimeError(
+            "Sightengine request timed out."
+        )
+
+        response = self.client.post(
+            "/analyze",
+            data={"file": (make_test_png(), "test.png")},
+            content_type="multipart/form-data"
+        )
+
+        self.assertEqual(response.status_code, 502)
+        mock_analyze.assert_called_once()
+
+        temp_path = mock_analyze.call_args.args[0]
+
+        self.assertFalse(Path(temp_path).exists())
+
+    @patch("app.analyze_media")
     def test_analyze_successful_image_upload(self, mock_analyze):
         mock_analyze.return_value = {
             "type": {
