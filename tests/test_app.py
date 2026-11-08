@@ -1,3 +1,4 @@
+
 import sys
 import io
 import unittest
@@ -50,6 +51,7 @@ class TestMediaTruthAPI(unittest.TestCase):
 
     def test_analyze_without_file(self):
         response = self.client.post("/analyze")
+
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.get_json())
 
@@ -59,11 +61,13 @@ class TestMediaTruthAPI(unittest.TestCase):
             data={"file": (None, "")},
             content_type="multipart/form-data"
         )
+
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.get_json())
 
     def test_analyze_rejects_get_request(self):
         response = self.client.get("/analyze")
+
         self.assertEqual(response.status_code, 405)
 
     @patch("app.analyze_media")
@@ -71,11 +75,13 @@ class TestMediaTruthAPI(unittest.TestCase):
         mock_analyze.side_effect = RuntimeError(
             "Sightengine request timed out."
         )
+
         response = self.client.post(
             "/analyze",
             data={"file": (make_test_png(), "test.png")},
             content_type="multipart/form-data"
         )
+
         self.assertEqual(response.status_code, 502)
         self.assertIn("error", response.get_json())
         mock_analyze.assert_called_once()
@@ -128,6 +134,29 @@ class TestMediaTruthAPI(unittest.TestCase):
 
         mock_analyze.assert_called_once()
 
+    # Today's new test: Missing AI score
+    @patch("app.analyze_media")
+    def test_analyze_missing_ai_score(self, mock_analyze):
+        mock_analyze.return_value = {
+            "type": {}
+        }
+
+        response = self.client.post(
+            "/analyze",
+            data={"file": (make_test_png(), "test.png")},
+            content_type="multipart/form-data"
+        )
+
+        self.assertEqual(response.status_code, 502)
+        self.assertTrue(response.is_json)
+
+        self.assertEqual(
+            response.get_json()["error"],
+            "Invalid response from the analysis service."
+        )
+
+        mock_analyze.assert_called_once()
+
     def test_rejects_unsupported_file_type(self):
         response = self.client.post(
             "/analyze",
@@ -136,6 +165,7 @@ class TestMediaTruthAPI(unittest.TestCase):
             },
             content_type="multipart/form-data"
         )
+
         self.assertEqual(response.status_code, 400)
         self.assertIn(
             "Unsupported file type",
@@ -151,6 +181,7 @@ class TestMediaTruthAPI(unittest.TestCase):
             },
             content_type="multipart/form-data"
         )
+
         self.assertEqual(response.status_code, 400)
         self.assertIn("empty", response.get_json()["error"].lower())
         mock_analyze.assert_not_called()
@@ -166,6 +197,7 @@ class TestMediaTruthAPI(unittest.TestCase):
             },
             content_type="multipart/form-data"
         )
+
         self.assertEqual(response.status_code, 413)
         self.assertIn(
             "too large",
@@ -184,11 +216,13 @@ class TestMediaTruthAPI(unittest.TestCase):
             },
             content_type="multipart/form-data"
         )
+
         self.assertEqual(response.status_code, 400)
         self.assertIn(
             "Invalid image content",
             response.get_json()["error"]
         )
+
         mock_analyze.assert_not_called()
 
 
