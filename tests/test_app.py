@@ -40,6 +40,7 @@ class TestMediaTruthAPI(unittest.TestCase):
 
     def test_health_endpoint_rejects_post(self):
         response = self.client.post("/health")
+
         self.assertEqual(response.status_code, 405)
 
     def test_health_endpoint_returns_json(self):
@@ -134,12 +135,33 @@ class TestMediaTruthAPI(unittest.TestCase):
 
         mock_analyze.assert_called_once()
 
-    # Today's new test: Missing AI score
+    # Test missing AI score
     @patch("app.analyze_media")
     def test_analyze_missing_ai_score(self, mock_analyze):
         mock_analyze.return_value = {
             "type": {}
         }
+
+        response = self.client.post(
+            "/analyze",
+            data={"file": (make_test_png(), "test.png")},
+            content_type="multipart/form-data"
+        )
+
+        self.assertEqual(response.status_code, 502)
+        self.assertTrue(response.is_json)
+
+        self.assertEqual(
+            response.get_json()["error"],
+            "Invalid response from the analysis service."
+        )
+
+        mock_analyze.assert_called_once()
+
+    # Today's new test: Detector returns None
+    @patch("app.analyze_media")
+    def test_analyze_none_detector_response(self, mock_analyze):
+        mock_analyze.return_value = None
 
         response = self.client.post(
             "/analyze",
