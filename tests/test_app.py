@@ -179,6 +179,26 @@ class TestMediaTruthAPI(unittest.TestCase):
 
         mock_analyze.assert_called_once()
 
+    @patch("app.analyze_media")
+    def test_analyze_invalid_type_response(self, mock_analyze):
+        mock_analyze.return_value = {"type": None}
+
+        response = self.client.post(
+            "/analyze",
+            data={"file": (make_test_png(), "test.png")},
+            content_type="multipart/form-data"
+        )
+
+        self.assertEqual(response.status_code, 502)
+        self.assertTrue(response.is_json)
+
+        self.assertEqual(
+            response.get_json()["error"],
+            "Invalid response from the analysis service."
+        )
+
+        mock_analyze.assert_called_once()
+
     def test_rejects_unsupported_file_type(self):
         response = self.client.post(
             "/analyze",
